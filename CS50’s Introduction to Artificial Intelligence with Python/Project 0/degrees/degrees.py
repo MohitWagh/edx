@@ -92,8 +92,36 @@ def shortest_path(source, target):
     If no possible path, returns None.
     """
 
-    # TODO
-    raise NotImplementedError
+    people_visited = set()
+    movies_visited = set()
+
+    source_node = Node(source, None, None)
+
+    queue = QueueFrontier()
+
+    queue.add(source_node)
+
+    while not queue.empty():
+        node = queue.remove()
+        people_visited.add(node.state)
+        movies_visited.add(node.action)
+        neighbours = neighbors_for_person(node.state)
+        for movie, person in neighbours:
+            if not (movie in movies_visited or person in people_visited):
+                if person == target:
+                    return extract_path_from_node(Node(person, node, movie))
+                queue.add(Node(person, node, movie))
+
+    return None
+
+
+def extract_path_from_node(node):
+    path = []
+    while node.action is not None:
+        path.append((node.action, node.state))
+        node = node.parent
+    path.reverse()
+    return path
 
 
 def person_id_for_name(name):
