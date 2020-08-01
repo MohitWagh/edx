@@ -152,9 +152,9 @@ class CrosswordCreator():
         """
         if arcs is None:
             arcs = []
-        for v in self.crossword.variables:
-            for neighbour in self.crossword.neighbors(v):
-                arcs.append((v, neighbour))
+            for v in self.crossword.variables:
+                for neighbour in self.crossword.neighbors(v):
+                    arcs.append((v, neighbour))
         while arcs:
             to_revise = arcs.pop()
             changes = self.revise(to_revise[0], to_revise[1])
@@ -228,11 +228,11 @@ class CrosswordCreator():
         if self.assignment_complete(assignment):
             return None
         unassigned = self.crossword.variables - assignment.keys()
-        min = math.inf
+        min_values = math.inf
         min_variable = None
         for i in unassigned:
-            if len(self.domains[i]) < min:
-                min = len(self.domains[i])
+            if len(self.domains[i]) < min_values:
+                min_values = len(self.domains[i])
                 min_variable = i
         return min_variable
 
@@ -250,11 +250,21 @@ class CrosswordCreator():
             return assignment
         for i in self.order_domain_values(unassigned, assignment):
             assignment[unassigned] = i
-            if not self.consistent(assignment) or self.backtrack(assignment) is None:
+            # changed_domain = self.domains[unassigned] - {i}
+            self.domains[unassigned].clear()
+            self.domains[unassigned].add(i)
+            if not self.consistent(assignment) or not self.maintain_ac3(unassigned) or self.backtrack(assignment) is None:
                 assignment.pop(unassigned)
+                # self.domains[unassigned].update(changed_domain)
             else:
                 return assignment
         return None
+
+    def maintain_ac3(self, assigned):
+        arcs = []
+        for i in self.crossword.neighbors(assigned):
+            arcs.append((i, assigned))
+        return self.ac3(arcs)
 
 
 def main():
