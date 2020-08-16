@@ -6,6 +6,8 @@ import tensorflow as tf
 
 from sklearn.model_selection import train_test_split
 
+# dataset = https://cdn.cs50.net/ai/2020/x/projects/5/gtsrb.zip
+
 EPOCHS = 10
 IMG_WIDTH = 30
 IMG_HEIGHT = 30
