@@ -6,6 +6,8 @@ import tensorflow as tf
 
 from sklearn.model_selection import train_test_split
 
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+
 # dataset = https://cdn.cs50.net/ai/2020/x/projects/5/gtsrb.zip
 
 EPOCHS = 10
@@ -16,7 +18,6 @@ TEST_SIZE = 0.4
 
 
 def main():
-
     # Check command-line arguments
     if len(sys.argv) not in [2, 3]:
         sys.exit("Usage: python traffic.py data_directory [model.h5]")
@@ -37,7 +38,7 @@ def main():
     model.fit(x_train, y_train, epochs=EPOCHS)
 
     # Evaluate neural network performance
-    model.evaluate(x_test,  y_test, verbose=2)
+    model.evaluate(x_test, y_test, verbose=2)
 
     # Save model to file
     if len(sys.argv) == 3:
@@ -60,7 +61,18 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
-    raise NotImplementedError
+    images = []
+    labels = []
+    path_to_data = os.path.join(os.curdir, data_dir)
+    for label in os.listdir(path_to_data):
+        print(label)
+        path_to_label = os.path.join(path_to_data, label)
+        for im in os.listdir(path_to_label):
+            path_to_image = os.path.join(path_to_label, im)
+            im = cv2.imread(path_to_image)
+            images.append(cv2.resize(im, (IMG_HEIGHT, IMG_WIDTH)))
+            labels.append(label)
+    return images, labels
 
 
 def get_model():
@@ -69,7 +81,34 @@ def get_model():
     `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
-    raise NotImplementedError
+    print("getting model")
+    model = tf.keras.models.Sequential([
+
+        tf.keras.layers.Conv2D(
+            32, (3, 3), activation="relu", input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)
+        ),
+
+        tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+
+        tf.keras.layers.Conv2D(
+            32, (3, 3), activation="relu", input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)
+        ),
+
+        tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(256, activation="relu"),
+        tf.keras.layers.Dense(256, activation="relu"),
+        tf.keras.layers.Dropout(0.5),
+
+        tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
+    ])
+    model.compile(
+        optimizer="adam",
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+    return model
 
 
 if __name__ == "__main__":
